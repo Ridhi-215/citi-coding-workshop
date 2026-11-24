@@ -9,7 +9,7 @@ backend (runs on the `java25` runtime), PostgreSQL (local) / Aurora PostgreSQL (
 |---|---|---|
 | 1 | Java packaging check (J7) on LocalStack | Done - jar must be in `lib/` (see below) |
 | 1 | Template fixes J3-J6, shared build step, #1, #2, #4 | Done |
-| 1 | Local Postgres round-trip from Lambda | Blocked - Postgres listens on 127.0.0.1 only (needs `sudo`) |
+| 1 | Local Postgres round-trip from Lambda | Done - LocalStack Lambda (Java 25.0.5) -> host Postgres 18.7 via 172.17.0.1, migrations + seed applied |
 | 1 | First AWS deploy + Aurora round-trip | Done - Java 25.0.5 runtime, Aurora 17.7 over SSL, migrations + seed applied |
 | 1 | CloudFront: API via `/api/auth-service`, API 404 passes through as JSON 404 | Done |
 | 2 | Shared module (router, auth, validation, query builder) | Written; router unit tests (17) + migrations IT (3) pass |
@@ -18,8 +18,7 @@ backend (runs on the `java25` runtime), PostgreSQL (local) / Aurora PostgreSQL (
 | 4 | Frontend | Not started |
 | 5 | AWS deploy, README | Not started |
 
-Java fallback timebox: started 2026-11-24 07:40 UTC, 1.5 h to have the Java path working
-locally and in AWS (otherwise recommend switching the backend to Python).
+Java fallback timebox (07:40 UTC, 1.5 h): **met** - Java path works locally and in AWS, no switch to Python.
 
 ## Findings and fixes
 
@@ -69,6 +68,4 @@ locally and in AWS (otherwise recommend switching the backend to Python).
 
 ## Open items
 
-- Local Postgres must listen on `0.0.0.0` and accept the Docker range (`start-dev.sh`
-  does this with `sudo`).
 - `~/.bashrc` line with `AWS_REGION` needs `export`.
