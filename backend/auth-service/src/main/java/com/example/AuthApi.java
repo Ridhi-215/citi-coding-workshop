@@ -34,7 +34,10 @@ final class AuthApi {
         this.tokens = tokens;
     }
 
-    /** {@code POST /register}: self sign-up; new accounts are always viewers. */
+    /**
+     * {@code POST /register}: self sign-up. New accounts are always viewers; any {@code role}
+     * in the body is ignored (only an admin can change roles). 409 if the email is taken.
+     */
     Map<String, Object> register(Request req) throws Exception {
         Validator v = new Validator(req.json());
         String email = v.requiredEmail("email");
@@ -42,9 +45,7 @@ final class AuthApi {
         String name = v.requiredString("full_name", 120);
         v.throwIfInvalid();
 
-        if (Sql.queryOne(Db.get(), "SELECT 1 FROM users WHERE email = ?", email).isPresent()) {
-            throw ApiException.validation(Map.of("email", "An account with this email already exists"));
-        }
+        UsersApi.ensureEmailFree(email);
         Map<String, Object> user = Sql.queryOne(Db.get(),
             "INSERT INTO users (email, password_hash, full_name, role) VALUES (?, ?, ?, 'viewer') RETURNING "
                 + USER_COLUMNS,

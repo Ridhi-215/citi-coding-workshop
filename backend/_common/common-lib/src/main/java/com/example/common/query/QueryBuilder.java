@@ -36,7 +36,6 @@ public final class QueryBuilder {
     private final String select;
     private final List<String> conditions = new ArrayList<>();
     private final List<Object> params = new ArrayList<>();
-    private String groupBy = "";
     private String orderBy = "";
     private String paging = "";
     private int limit = DEFAULT_LIMIT;
@@ -103,42 +102,6 @@ public final class QueryBuilder {
                 + String.join(", ", allowed.stream().sorted().toList()));
         }
         return eq(column, value);
-    }
-
-    /**
-     * Adds a raw condition written in code, with its parameters.
-     *
-     * @param condition SQL condition with {@code ?} placeholders
-     * @param values    values for the placeholders
-     * @return this builder
-     */
-    public QueryBuilder where(String condition, Object... values) {
-        conditions.add("(" + condition + ")");
-        params.addAll(List.of(values));
-        return this;
-    }
-
-    /**
-     * Adds a raw condition only when a flag is set.
-     *
-     * @param flag      condition is added only when TRUE
-     * @param condition SQL condition with {@code ?} placeholders
-     * @param values    values for the placeholders
-     * @return this builder
-     */
-    public QueryBuilder whereIf(Boolean flag, String condition, Object... values) {
-        return Boolean.TRUE.equals(flag) ? where(condition, values) : this;
-    }
-
-    /**
-     * Sets a GROUP BY clause (written in code).
-     *
-     * @param columns group-by expression
-     * @return this builder
-     */
-    public QueryBuilder groupBy(String columns) {
-        this.groupBy = " GROUP BY " + columns;
-        return this;
     }
 
     /**
@@ -213,7 +176,7 @@ public final class QueryBuilder {
      */
     public String sql() {
         String where = conditions.isEmpty() ? "" : " WHERE " + String.join(" AND ", conditions);
-        return "SELECT q.*, count(*) OVER () AS total_count FROM (" + select + where + groupBy + ") AS q"
+        return "SELECT q.*, count(*) OVER () AS total_count FROM (" + select + where + ") AS q"
             + (orderBy.isEmpty() ? " ORDER BY q.id" : orderBy) + paging;
     }
 

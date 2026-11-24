@@ -52,7 +52,7 @@ final class AllocationsApi {
         QueryBuilder q = new QueryBuilder("SELECT * FROM (" + SELECT + ") a")
             .eq("team_member_id", req.queryId("member_id"))
             .eq("project_id", req.queryId("project_id"))
-            .whereIf(req.queryBool("current"), "is_current = ?", req.queryBool("current"))
+            .eq("is_current", req.queryBool("current"))
             .search(req.query("search"), "member_name", "project_code", "project_name", "role_on_project")
             .orderBy(req, SORTABLE, "start_date")
             .page(req);

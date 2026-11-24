@@ -37,3 +37,14 @@ test('member, deliverable and expense rules', () => {
   expect(validateExpense({ category: 'labor', description: 'x', amount: '0', incurred_on: '2026-01-01' }).amount).toBeDefined();
   expect(validateExpense({ category: 'labor', description: 'x', amount: '10.5', incurred_on: '2026-01-01' })).toEqual({});
 });
+
+import { isEmail, passwordProblem, validateRegistration } from './validation';
+
+test('registration rules match the server', () => {
+  expect(isEmail(' a@b.co ')).toBe(true);
+  expect(isEmail('a@b')).toBe(false);
+  expect(passwordProblem('Secret123')).toBeNull();
+  expect(passwordProblem('x'.repeat(73) + '1')).toMatch(/72/);
+  expect(validateRegistration({ full_name: 'A', email: 'a@b.co', password: 'Secret123', confirm_password: 'Secret123' }))
+    .toEqual({});
+});

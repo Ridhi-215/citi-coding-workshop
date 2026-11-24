@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
-import { Alert, Box, Breadcrumbs, Chip, Grid, LinearProgress, Link, Stack, Typography } from '@mui/material';
+import { Alert, Box, Breadcrumbs, Button, Chip, Grid, LinearProgress, Link, Stack, Typography } from '@mui/material';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import AllocationBar from '../components/AllocationBar';
 import AllocationsTable from '../components/AllocationsTable';
 import Panel from '../components/Panel';
+import NotFoundPage from './NotFoundPage';
 import { useQuery } from '../hooks';
 import { getMember } from '../services/resourcesService';
 import { labelize } from '../utils/format';
@@ -13,7 +14,10 @@ export default function MemberPage() {
   const fetcher = useCallback(({ memberId }) => getMember(memberId), []);
   const { data: m, error, loading, reload } = useQuery(fetcher, { memberId: id });
 
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if ([400, 404].includes(error?.status)) return <NotFoundPage />;
+  if (error) {
+    return <Alert severity="error" action={<Button color="inherit" size="small" onClick={reload}>Retry</Button>}>{error.message}</Alert>;
+  }
   if (!m) return <LinearProgress aria-label="Loading team member" />;
 
   return (

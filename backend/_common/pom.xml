@@ -51,8 +51,8 @@
         <mockito.version>5.12.0</mockito.version>
         <jacoco.version>0.8.12</jacoco.version>
         <jacoco.minimum.line.coverage>0.80</jacoco.minimum.line.coverage>
-        <!-- Flipped to true once the real test suites exist; override with -Djacoco.haltOnFailure=true -->
-        <jacoco.haltOnFailure>false</jacoco.haltOnFailure>
+        <!-- Build fails below 80% line coverage per module (skip locally with -Djacoco.haltOnFailure=false) -->
+        <jacoco.haltOnFailure>true</jacoco.haltOnFailure>
     </properties>
 
     <dependencyManagement>

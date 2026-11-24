@@ -12,6 +12,7 @@ import BudgetBar from '../components/BudgetBar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import FormDialog from '../components/FormDialog';
 import Panel from '../components/Panel';
+import NotFoundPage from './NotFoundPage';
 import { useAuth } from '../context/AuthContext';
 import { useNotify } from '../context/NotifyContext';
 import { useQuery } from '../hooks';
@@ -65,7 +66,10 @@ export default function ProjectDetailPage() {
     }
   };
 
-  if (health.error) return <Alert severity="error">{health.error.message}</Alert>;
+  if ([400, 404].includes(health.error?.status)) return <NotFoundPage />;
+  if (health.error) {
+    return <Alert severity="error" action={<Button color="inherit" size="small" onClick={health.reload}>Retry</Button>}>{health.error.message}</Alert>;
+  }
   if (!health.data) return <LinearProgress aria-label="Loading project" />;
   const { project: p, deliverables, team, dependencies } = health.data;
   const names = Object.fromEntries(deliverables.map((d) => [d.id, d.name]));

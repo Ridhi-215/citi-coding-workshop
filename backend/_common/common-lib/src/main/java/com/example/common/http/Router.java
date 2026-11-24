@@ -178,6 +178,17 @@ public final class Router {
     }
 
     /**
+     * Lists the routes that need no token, as {@code "METHOD /pattern"} (used by tests to make
+     * sure nothing becomes public by accident).
+     *
+     * @return public routes in registration order
+     */
+    public List<String> publicRoutes() {
+        return routes.stream().filter(r -> r.permission() == null)
+            .map(r -> r.method() + " /" + String.join("/", r.segments())).toList();
+    }
+
+    /**
      * Returns the token issuer/verifier, created on first use (needs {@code JWT_SECRET}).
      *
      * @return tokens shared by this router

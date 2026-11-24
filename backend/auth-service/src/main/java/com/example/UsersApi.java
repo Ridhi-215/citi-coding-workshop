@@ -28,7 +28,7 @@ final class UsersApi {
         QueryBuilder q = new QueryBuilder("SELECT " + AuthApi.USER_COLUMNS + " FROM users")
             .search(req.query("search"), "email", "full_name")
             .eqEnum("role", req.query("role"), ROLES, "role")
-            .whereIf(req.queryBool("active"), "is_active = ?", req.queryBool("active"))
+            .eq("is_active", req.queryBool("active"))
             .orderBy(req, SORTABLE, "email")
             .page(req);
         return Responses.ok(Page.of(Sql.query(Db.get(), q.sql(), q.params()), q));
@@ -47,9 +47,7 @@ final class UsersApi {
         String name = v.requiredString("full_name", 120);
         String role = v.optionalEnum("role", ROLES, "viewer");
         v.throwIfInvalid();
-        if (Sql.queryOne(Db.get(), "SELECT 1 FROM users WHERE email = ?", email).isPresent()) {
-            throw ApiException.validation(Map.of("email", "An account with this email already exists"));
-        }
+        ensureEmailFree(email);
         Map<String, Object> user = Sql.queryOne(Db.get(),
             "INSERT INTO users (email, password_hash, full_name, role) VALUES (?, ?, ?, ?) RETURNING "
                 + AuthApi.USER_COLUMNS,
@@ -121,6 +119,14 @@ final class UsersApi {
     private static boolean isLastActiveAdmin(Map<String, Object> user) throws Exception {
         return "admin".equals(user.get("role")) && Boolean.TRUE.equals(user.get("is_active"))
             && Sql.scalar(Db.get(), "SELECT count(*) FROM users WHERE role = 'admin' AND is_active") <= 1;
+    }
+
+    /** Throws 409 EMAIL_TAKEN when an account with this (normalized) email exists. */
+    static void ensureEmailFree(String email) throws Exception {
+        if (Sql.queryOne(Db.get(), "SELECT 1 FROM users WHERE email = ?", email).isPresent()) {
+            throw ApiException.conflict("EMAIL_TAKEN", "An account with this email already exists",
+                Map.of("email", "An account with this email already exists"));
+        }
     }
 
     private static Map<String, Object> find(long id) throws Exception {

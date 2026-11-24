@@ -1,7 +1,7 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import ProjectsPage from './ProjectsPage';
 import { useAuth } from '../context/AuthContext';
-import { listProjects } from '../services/projectsService';
+import { createProject, deleteProject, listProjects, updateProject } from '../services/projectsService';
 import { authFor, renderAt } from '../test/renderWithAuth';
 
 jest.mock('../context/AuthContext', () => ({ useAuth: jest.fn() }));
@@ -43,4 +43,36 @@ test('shows at-risk badge and budget overrun', async () => {
   renderAt(<ProjectsPage />);
   expect(await screen.findByText('At risk')).toBeInTheDocument();
   expect(screen.getByText(/107.7%/)).toBeInTheDocument();
+});
+
+test('creates and edits a project through the dialog, showing server field errors', async () => {
+  useAuth.mockReturnValue(authFor('manager'));
+  createProject.mockRejectedValueOnce(Object.assign(new Error('One or more fields are invalid'), {
+    code: 'VALIDATION_FAILED', details: { code: 'another project already uses this code' },
+  })).mockResolvedValueOnce({});
+  updateProject.mockResolvedValue({});
+  deleteProject.mockResolvedValue(null);
+  renderAt(<ProjectsPage />);
+  await screen.findByText('Orion Data Platform');
+
+  fireEvent.click(screen.getByRole('button', { name: /new project/i }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create project' }));
+  expect(screen.getByText('Name is required')).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText(/Code/), { target: { value: 'zeta' } });
+  fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: 'Zeta' } });
+  fireEvent.change(screen.getByLabelText(/Start date/), { target: { value: '2026-01-01' } });
+  fireEvent.change(screen.getByLabelText(/End date/), { target: { value: '2026-06-30' } });
+  fireEvent.change(screen.getByLabelText(/Planned budget/), { target: { value: '1000' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Create project' }));
+  expect(await screen.findByText('another project already uses this code')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Create project' }));
+  await waitFor(() => expect(createProject).toHaveBeenLastCalledWith(expect.objectContaining({ code: 'ZETA', name: 'Zeta' })));
+
+  fireEvent.click(await screen.findByRole('button', { name: 'Edit ORION' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+  await waitFor(() => expect(updateProject).toHaveBeenCalledWith(1, expect.objectContaining({ code: 'ORION' })));
+
+  fireEvent.click(await screen.findByRole('button', { name: 'Delete ORION' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
+  await waitFor(() => expect(deleteProject).toHaveBeenCalledWith(1));
 });

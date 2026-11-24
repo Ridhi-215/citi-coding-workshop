@@ -7,9 +7,16 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(() => Boolean(tokenStore.get()));
+  // True when the user was signed out because their session ran out (shown on the login page).
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
-    setSessionExpiredHandler(() => setUser(null));
+    setSessionExpiredHandler(() => {
+      setUser((current) => {
+        if (current) setSessionExpired(true);
+        return null;
+      });
+    });
     if (!tokenStore.get()) return;
     authService.fetchMe()
       .then(setUser)
@@ -17,20 +24,30 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback(async (email, password) => {
-    const u = await authService.login(email, password);
+  const startSession = useCallback((u) => {
+    setSessionExpired(false);
     setUser(u);
     return u;
   }, []);
 
+  const login = useCallback(
+    async (email, password) => startSession(await authService.login(email, password)), [startSession],
+  );
+
+  const register = useCallback(async (fields) => startSession(await authService.register(fields)), [startSession]);
+
   const logout = useCallback(() => {
     authService.logout();
+    setSessionExpired(false);
     setUser(null);
   }, []);
 
   const can = useCallback((permission) => Boolean(user?.permissions?.includes(permission)), [user]);
 
-  const value = useMemo(() => ({ user, loading, login, logout, can }), [user, loading, login, logout, can]);
+  const value = useMemo(
+    () => ({ user, loading, sessionExpired, login, register, logout, can }),
+    [user, loading, sessionExpired, login, register, logout, can],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

@@ -65,6 +65,7 @@ export default function TeamPage() {
       await deleteMember(deleting.id);
       notify(`${deleting.full_name} removed`);
       setDeleting(null);
+      if (data.items.length === 1 && page > 0) setPage(page - 1);
       query.reload();
     } catch (err) {
       notify(err.message, 'error');
@@ -137,7 +138,7 @@ export default function TeamPage() {
             </Table>
           </TableContainer>
         )}
-        <TablePagination component="div" count={data.total} page={page} rowsPerPage={rowsPerPage} rowsPerPageOptions={[10, 25, 50]}
+        <TablePagination component="div" count={data.total ?? 0} page={page} rowsPerPage={rowsPerPage} rowsPerPageOptions={[10, 25, 50]}
           onPageChange={(_, p) => setPage(p)} onRowsPerPageChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }} />
       </Paper>
 

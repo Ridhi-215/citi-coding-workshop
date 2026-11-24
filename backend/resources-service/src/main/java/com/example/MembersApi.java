@@ -28,7 +28,7 @@ final class MembersApi {
             .search(req.query("search"), "full_name", "email", "job_title", "department", "location")
             .eq("department", req.query("department"))
             .eqEnum("employment_type", req.query("employment_type"), EMPLOYMENT, "employment_type")
-            .whereIf(req.queryBool("over_allocated"), "over_allocated = ?", req.queryBool("over_allocated"))
+            .eq("over_allocated", req.queryBool("over_allocated"))
             .orderBy(req, SORTABLE, "full_name")
             .page(req);
         return Responses.ok(Page.of(Sql.query(Db.get(), q.sql(), q.params()), q));

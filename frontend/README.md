@@ -1,63 +1,30 @@
-# Coding Workshop - Frontend Code
+# ACME Project Tracker - Frontend
 
-## Overview
+React 19 + Material UI single-page app. See the [main README](../README.md) for the
+architecture, setup and demo accounts.
 
-This folder contains React frontend application with hello world example.
+## Commands
 
-## Prerequisites
+```sh
+npm install
+npm run dev            # http://localhost:3000 (normally started by ../bin/start-dev.sh)
+npm run lint
+npm test               # Jest + Testing Library
+npm run test:coverage  # coverage report in coverage/
+npm run build          # production build in dist/ (used by ../bin/deploy-frontend.sh)
+```
 
-- React - JavaScript library for building user interfaces
-- React Router - Client-side routing for React
-- Material UI - Comprehensive UI component library
+The API base URL comes from `VITE_API_URL` (`.env.local`, written by `../bin/generate-env.sh`
+locally; set by `../bin/deploy-frontend.sh` for AWS). Requests go to
+`${VITE_API_URL}/api/<service>/<path>`.
 
 ## Structure
 
+```text
+src/pages/       one component per route (login, register, dashboard, projects, ...)
+src/components/  layout, dialogs, tables and small display components
+src/context/     AuthContext (session, permissions) and NotifyContext (snackbar messages)
+src/services/    API client (tokens, refresh, errors) and one module per backend service
+src/utils/       formatting, validation rules and chart colors
+src/hooks.js     useQuery (data loading), useDebounced, useOptions
 ```
-coding-workshop-participant/
-├── frontend/              # React frontend
-│   ├── public/              # Public assets
-│   ├── src/                 # Source code
-│   │   ├── pages/             # Page components
-│   │   ├── components/        # Reusable components
-│   │   ├── services/          # API client
-│   │   └── App.js             # Main app
-│   ├── .env.sample          # React environment variables
-│   ├── eslint.config.js     # ESLint JS tool configuration
-│   ├── index.html           # Landing page
-│   ├── package.json         # App metadata with dependencies
-│   ├── README.md            # Frontend guide (YOU ARE HERE)
-│   └── vite.config.js       # Vite build tool configuration
-├── ...
-```
-
-## Usage
-
-### Local Development
-
-To run your application locally:
-
-```sh
-./bin/start-dev.sh
-```
-
-To view your application, open the browser and navigate to `http://localhost:3000`.
-
-### Cloud Deployment
-
-To deploy your frontend to AWS:
-
-```sh
-./bin/deploy-frontend.sh
-```
-
-To view your application, open the browser and navigate to CloudFront URL.
-
-## Clean Up
-
-To remove all deployed resources (including frontend):
-
-```sh
-./bin/cleanup-environment.sh
-```
-
-**Warning**: This removes all infra resources. Cannot be undone.

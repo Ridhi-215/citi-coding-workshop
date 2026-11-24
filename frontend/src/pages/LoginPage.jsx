@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Alert, Box, Button, Card, CardContent, CircularProgress, Stack, TextField, Typography } from '@mui/material';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Alert, Box, Button, CircularProgress, Link, Stack, TextField, Typography } from '@mui/material';
+import { Link as RouterLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import AuthCard from '../components/AuthCard';
 import { useAuth } from '../context/AuthContext';
+import { isEmail } from '../utils/validation';
 
 export default function LoginPage() {
-  const { user, login } = useAuth();
+  const { user, login, sessionExpired } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
@@ -18,7 +20,7 @@ export default function LoginPage() {
   const submit = async (event) => {
     event.preventDefault();
     const fieldErrors = {};
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) fieldErrors.email = 'Enter a valid email address';
+    if (!isEmail(email)) fieldErrors.email = 'Enter a valid email address';
     if (!password) fieldErrors.password = 'Enter your password';
     setErrors(fieldErrors);
     setError('');
@@ -34,35 +36,30 @@ export default function LoginPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2, bgcolor: 'background.default' }}>
-      <Card sx={{ width: '100%', maxWidth: 400 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h5" fontWeight={700} gutterBottom>ACME Project Tracker</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>Sign in to continue</Typography>
-          <Box component="form" noValidate onSubmit={submit}>
-            <Stack spacing={2}>
-              {error && <Alert severity="error">{error}</Alert>}
-              <TextField
-                label="Email" type="email" autoComplete="email" autoFocus fullWidth
-                value={email} onChange={(e) => setEmail(e.target.value)}
-                error={Boolean(errors.email)} helperText={errors.email}
-              />
-              <TextField
-                label="Password" type="password" autoComplete="current-password" fullWidth
-                value={password} onChange={(e) => setPassword(e.target.value)}
-                error={Boolean(errors.password)} helperText={errors.password}
-              />
-              <Button type="submit" variant="contained" size="large" disabled={submitting}
-                startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : null}>
-                {submitting ? 'Signing in…' : 'Sign in'}
-              </Button>
-            </Stack>
-          </Box>
-          <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 3 }}>
-            Demo accounts: admin@, manager@, contributor@, viewer@acme.com — password Demo@1234
-          </Typography>
-        </CardContent>
-      </Card>
-    </Box>
+    <AuthCard title="Sign in" subtitle="Track projects, deliverables, budgets and team allocation.">
+      <Box component="form" noValidate onSubmit={submit}>
+        <Stack spacing={2}>
+          {sessionExpired && !error && <Alert severity="info">Your session has expired. Please sign in again.</Alert>}
+          {error && <Alert severity="error">{error}</Alert>}
+          <TextField
+            label="Email" type="email" autoComplete="email" autoFocus fullWidth
+            value={email} onChange={(e) => setEmail(e.target.value)}
+            error={Boolean(errors.email)} helperText={errors.email}
+          />
+          <TextField
+            label="Password" type="password" autoComplete="current-password" fullWidth
+            value={password} onChange={(e) => setPassword(e.target.value)}
+            error={Boolean(errors.password)} helperText={errors.password}
+          />
+          <Button type="submit" variant="contained" size="large" disabled={submitting}
+            startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : null}>
+            {submitting ? 'Signing in…' : 'Sign in'}
+          </Button>
+        </Stack>
+      </Box>
+      <Typography variant="body2" sx={{ mt: 3, textAlign: 'center' }}>
+        Don&apos;t have an account? <Link component={RouterLink} to="/register">Register</Link>
+      </Typography>
+    </AuthCard>
   );
 }

@@ -30,7 +30,7 @@ final class DeliverablesApi {
             .eq("project_id", req.queryId("project_id"))
             .eq("owner_id", req.queryId("owner_id"))
             .eqEnum("status", req.query("status"), STATUSES, "status")
-            .whereIf(req.queryBool("overdue"), "is_overdue = ?", req.queryBool("overdue"))
+            .eq("is_overdue", req.queryBool("overdue"))
             .orderBy(req, SORTABLE, "due_date")
             .page(req);
         return Responses.ok(Page.of(Sql.query(Db.get(), q.sql(), q.params()), q));

@@ -66,7 +66,7 @@ export default function DashboardPage() {
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, lg: 7 }}>
           <Panel title="Budget: spent vs. planned" subtitle="Active and on-hold projects (spent = recorded expenses)">
-            <BarChart
+            {budgetRows.length === 0 ? <Empty>No active or on-hold projects.</Empty> : <BarChart
               height={Math.max(220, budgetRows.length * 44 + 60)}
               layout="horizontal"
               dataset={budgetRows}
@@ -79,7 +79,7 @@ export default function DashboardPage() {
               borderRadius={4}
               grid={{ vertical: true }}
               margin={{ left: 0, right: 16 }}
-            />
+            />}
           </Panel>
         </Grid>
 
@@ -168,7 +168,7 @@ export default function DashboardPage() {
 
         <Grid size={{ xs: 12, lg: 6 }}>
           <Panel title="Resource allocation today" subtitle="Per person; the red bars are above 100%">
-            <BarChart
+            {allocationRows.length === 0 ? <Empty>Nobody is allocated today.</Empty> : <BarChart
               height={Math.max(240, allocationRows.length * 28 + 60)}
               layout="horizontal"
               dataset={allocationRows.map((m) => ({ name: m.full_name, pct: m.current_allocation_pct }))}
@@ -183,7 +183,7 @@ export default function DashboardPage() {
               borderRadius={4}
               grid={{ vertical: true }}
               margin={{ left: 0, right: 16 }}
-            />
+            />}
           </Panel>
         </Grid>
 

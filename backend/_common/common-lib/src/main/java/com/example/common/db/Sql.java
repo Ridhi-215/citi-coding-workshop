@@ -72,21 +72,6 @@ public final class Sql {
     }
 
     /**
-     * Runs a query returning a single text value.
-     *
-     * @param conn   open connection
-     * @param sql    SQL with {@code ?} placeholders
-     * @param params values for the placeholders
-     * @return the first column of the first row, or null
-     * @throws SQLException on database errors
-     */
-    public static String scalarText(Connection conn, String sql, Object... params) throws SQLException {
-        try (PreparedStatement st = prepare(conn, sql, params); ResultSet rs = st.executeQuery()) {
-            return rs.next() ? rs.getString(1) : null;
-        }
-    }
-
-    /**
      * Runs an INSERT, UPDATE or DELETE.
      *
      * @param conn   open connection

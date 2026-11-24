@@ -82,6 +82,18 @@ public class ApiException extends RuntimeException {
     }
 
     /**
+     * 409 Conflict: the request clashes with existing data (e.g. an email already registered).
+     *
+     * @param code    machine-readable code
+     * @param message human-readable message
+     * @param details field errors, or null
+     * @return exception
+     */
+    public static ApiException conflict(String code, String message, Object details) {
+        return new ApiException(409, code, message, details);
+    }
+
+    /**
      * Returns the HTTP status code.
      *
      * @return status code

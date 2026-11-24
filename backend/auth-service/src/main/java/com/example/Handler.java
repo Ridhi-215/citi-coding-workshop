@@ -33,7 +33,7 @@ public class Handler implements RequestHandler<Map<String, Object>, Map<String, 
             .get("/health/db", null, req -> {
                 Map<String, Object> body = new LinkedHashMap<>();
                 body.put("status", "ok");
-                body.put("users", Sql.scalar(Db.get(), "SELECT count(*) FROM users"));
+                body.put("database", Sql.scalar(Db.get(), "SELECT 1") == 1 ? "ok" : "error");
                 return Responses.ok(body);
             })
             .post("/register", null, auth::register)

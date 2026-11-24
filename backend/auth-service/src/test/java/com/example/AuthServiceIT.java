@@ -63,15 +63,45 @@ class AuthServiceIT {
             "full_name", "New Person", "role", "admin");
         JsonNode body = call("POST", "/register", null, req, 201);
         assertEquals("viewer", body.at("/user/role").asText());
-        JsonNode dup = call("POST", "/register", null, req, 400);
+        JsonNode dup = call("POST", "/register", null, req, 409);
+        assertEquals("EMAIL_TAKEN", dup.at("/error/code").asText());
         assertTrue(dup.at("/error/details").has("email"));
+        // same email in different case is still a duplicate
+        call("POST", "/register", null, Map.of("email", "NEW.Person@acme.com", "password", "Secret123",
+            "full_name", "Again"), 409);
+        // the new account can sign in and stays a viewer even though "role": "admin" was sent
+        JsonNode login = call("POST", "/login", null, Map.of("email", "new.person@acme.com", "password", "Secret123"), 200);
+        assertEquals("viewer", login.at("/user/role").asText());
+        assertEquals("[\"READ\"]", login.at("/user/permissions").toString());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"short1", "lettersonly", "12345678"})
+    void registerEnforcesPasswordRules(String password) throws Exception {
+        JsonNode body = call("POST", "/register", null,
+            Map.of("email", "weak@acme.com", "password", password, "full_name", "W"), 400);
+        assertTrue(body.at("/error/details").has("password"), body.toString());
     }
 
     @Test
-    void registerRejectsWeakPassword() throws Exception {
-        JsonNode body = call("POST", "/register", null,
-            Map.of("email", "weak@acme.com", "password", "short", "full_name", "W"), 400);
-        assertTrue(body.at("/error/details/password").asText().contains("8"));
+    void registerValidatesEveryField() throws Exception {
+        JsonNode body = call("POST", "/register", null, Map.of("email", "not-an-email"), 400);
+        JsonNode details = body.at("/error/details");
+        assertTrue(details.has("email") && details.has("password") && details.has("full_name"), details.toString());
+    }
+
+    @Test
+    void healthDbIsPublicButRevealsNoData() throws Exception {
+        JsonNode body = call("GET", "/health/db", null, null, 200);
+        assertEquals("ok", body.get("database").asText());
+        assertFalse(body.has("users"));
+    }
+
+    @Test
+    void adminCreatingDuplicateEmailGets409() throws Exception {
+        JsonNode err = call("POST", "/users", token("admin@acme.com"), Map.of("email", "viewer@acme.com",
+            "password", "Secret123", "full_name", "Dup"), 409);
+        assertEquals("EMAIL_TAKEN", err.at("/error/code").asText());
     }
 
     @Test

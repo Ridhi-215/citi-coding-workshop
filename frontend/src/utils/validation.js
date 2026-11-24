@@ -13,6 +13,29 @@ export function validateProject(form) {
   return errors;
 }
 
+export const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim());
+
+/** Same rules as auth-service: 8-72 characters with at least one letter and one digit. */
+export function passwordProblem(password) {
+  if (!password) return 'Password is required';
+  if (password.length < 8) return 'Must be at least 8 characters';
+  if (password.length > 72) return 'Must be at most 72 characters';
+  if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) return 'Must contain a letter and a number';
+  return null;
+}
+
+export function validateRegistration(form) {
+  const errors = {};
+  if (!form.full_name.trim()) errors.full_name = 'Full name is required';
+  if (!form.email.trim()) errors.email = 'Email is required';
+  else if (!isEmail(form.email)) errors.email = 'Enter a valid email address';
+  const pw = passwordProblem(form.password);
+  if (pw) errors.password = pw;
+  if (!form.confirm_password) errors.confirm_password = 'Confirm your password';
+  else if (form.confirm_password !== form.password) errors.confirm_password = 'Passwords do not match';
+  return errors;
+}
+
 const isMoney = (v) => /^\d+(\.\d{1,2})?$/.test(String(v).trim());
 
 export function validateDeliverable(form) {
@@ -26,7 +49,7 @@ export function validateDeliverable(form) {
 export function validateMember(form) {
   const errors = {};
   if (!form.full_name.trim()) errors.full_name = 'Name is required';
-  if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) errors.email = 'Enter a valid email address';
+  if (!isEmail(form.email)) errors.email = 'Enter a valid email address';
   return errors;
 }
 

@@ -34,7 +34,7 @@ final class ProjectsApi {
             .eqEnum("status", req.query("status"), STATUSES, "status")
             .eqEnum("priority", req.query("priority"), PRIORITIES, "priority")
             .eq("manager_id", req.queryId("manager_id"))
-            .whereIf(req.queryBool("at_risk"), "at_risk = ?", req.queryBool("at_risk"))
+            .eq("at_risk", req.queryBool("at_risk"))
             .orderBy(req, SORTABLE, "code")
             .page(req);
         return Responses.ok(Page.of(Sql.query(Db.get(), q.sql(), q.params()), q));

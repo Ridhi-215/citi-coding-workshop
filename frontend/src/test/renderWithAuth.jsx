@@ -11,7 +11,7 @@ export const PERMISSIONS = {
 export function authFor(role, overrides = {}) {
   const user = { id: 1, email: `${role}@acme.com`, full_name: `${role} user`, role, permissions: PERMISSIONS[role] };
   return {
-    user, loading: false, login: jest.fn(), logout: jest.fn(),
+    user, loading: false, sessionExpired: false, login: jest.fn(), register: jest.fn(), logout: jest.fn(),
     can: (p) => user.permissions.includes(p), ...overrides,
   };
 }

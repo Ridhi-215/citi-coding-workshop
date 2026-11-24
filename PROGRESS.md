@@ -23,7 +23,7 @@ backend (runs on the `java25` runtime), PostgreSQL (local) / Aurora PostgreSQL (
 | 4 | Frontend: login, responsive shell, projects list/search/filter/CRUD with role-aware buttons | Done (minimal) |
 | 4 | Frontend: admin Users page, dashboard, deliverables + dependencies, team + allocations, project detail + expenses | Done |
 | 4 | Jest + Testing Library (37 tests: role-aware UI, users rules, api client, dialogs, validation) | Done |
-| 5 | AWS deploy of frontend | Done - https://dbi1uqut4q6ch.cloudfront.net (app routes, assets, API all verified) |
+| 5 | AWS deploy of frontend | Done - CloudFront URL printed by `deploy-frontend.sh` (app routes, assets, API all verified) |
 | 5 | README | Not started |
 
 Java fallback timebox (07:40 UTC, 1.5 h): **met** - Java path works locally and in AWS, no switch to Python.
@@ -74,11 +74,11 @@ Java fallback timebox (07:40 UTC, 1.5 h): **met** - Java path works locally and 
 
 ## Demo accounts
 
-`admin@acme.com`, `manager@acme.com`, `contributor@acme.com`, `viewer@acme.com`, password `Demo@1234`.
+See the README.
 
 ## AWS endpoints
 
-- Website / API base: https://dbi1uqut4q6ch.cloudfront.net
+- Website / API base: the CloudFront URL (`terraform -chdir=infra output website_url`)
 - Health: `GET /api/auth-service/health/db`
 - Note: first request after Aurora has paused takes ~15-20 s (resume from 0 ACU).
 
