@@ -130,7 +130,7 @@ export default function UsersPage() {
                   <CardContent>
                     <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                       <Box sx={{ minWidth: 0 }}>
-                        <Typography fontWeight={600}>
+                        <Typography component="div" fontWeight={600}>
                           {u.full_name} {u.id === me?.id && <Chip size="small" label="You" sx={{ ml: 0.5 }} />}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>{u.email}</Typography>

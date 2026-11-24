@@ -5,6 +5,12 @@ import {
 import { BarChart } from '@mui/x-charts/BarChart';
 import { Link as RouterLink } from 'react-router-dom';
 import { useMediaQuery } from 'react-responsive';
+import FolderIcon from '@mui/icons-material/FolderOutlined';
+import WarningIcon from '@mui/icons-material/ReportProblemOutlined';
+import PaymentsIcon from '@mui/icons-material/PaymentsOutlined';
+import TaskIcon from '@mui/icons-material/TaskAltOutlined';
+import EventBusyIcon from '@mui/icons-material/EventBusyOutlined';
+import GroupsIcon from '@mui/icons-material/GroupsOutlined';
 import Panel from '../components/Panel';
 import StatTile from '../components/StatTile';
 import { useQuery } from '../hooks';
@@ -45,21 +51,21 @@ export default function DashboardPage() {
       </Stack>
 
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid size={{ xs: 6, md: 2 }}><StatTile label="Active projects" value={k.active_projects} /></Grid>
+        <Grid size={{ xs: 6, md: 2 }}><StatTile icon={<FolderIcon />} label="Active projects" value={k.active_projects} /></Grid>
         <Grid size={{ xs: 6, md: 2 }}>
-          <StatTile label="At risk" value={k.at_risk_projects} tone={k.at_risk_projects ? 'critical' : undefined} detail="active or on hold" />
+          <StatTile icon={<WarningIcon />} label="At risk" value={k.at_risk_projects} tone={k.at_risk_projects ? 'critical' : undefined} detail="active or on hold" />
         </Grid>
         <Grid size={{ xs: 6, md: 2 }}>
-          <StatTile label="Budget used" value={`${budgetPct}%`} detail={`${compactMoney(k.budget_spent)} of ${compactMoney(k.budget_planned)}`} />
+          <StatTile icon={<PaymentsIcon />} label="Budget used" value={`${budgetPct}%`} detail={`${compactMoney(k.budget_spent)} of ${compactMoney(k.budget_planned)}`} />
         </Grid>
         <Grid size={{ xs: 6, md: 2 }}>
-          <StatTile label="Deliverables done" value={`${completionPct}%`} detail={`${k.deliverables_completed} of ${k.deliverables_total}`} />
+          <StatTile icon={<TaskIcon />} label="Deliverables done" value={`${completionPct}%`} detail={`${k.deliverables_completed} of ${k.deliverables_total}`} />
         </Grid>
         <Grid size={{ xs: 6, md: 2 }}>
-          <StatTile label="Overdue deliverables" value={k.deliverables_overdue} tone={k.deliverables_overdue ? 'critical' : undefined} />
+          <StatTile icon={<EventBusyIcon />} label="Overdue deliverables" value={k.deliverables_overdue} tone={k.deliverables_overdue ? 'critical' : undefined} />
         </Grid>
         <Grid size={{ xs: 6, md: 2 }}>
-          <StatTile label="Over-allocated people" value={k.over_allocated_members} tone={k.over_allocated_members ? 'critical' : undefined} detail={`of ${k.team_size} team members`} />
+          <StatTile icon={<GroupsIcon />} label="Over-allocated people" value={k.over_allocated_members} tone={k.over_allocated_members ? 'critical' : undefined} detail={`of ${k.team_size} team members`} />
         </Grid>
       </Grid>
 

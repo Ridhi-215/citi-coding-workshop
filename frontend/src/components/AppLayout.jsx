@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  AppBar, Avatar, Box, Chip, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon,
+  AppBar, Avatar, Box, Chip, Drawer, IconButton, List, ListItemButton, ListItemIcon,
   ListItemText, Toolbar, Tooltip, Typography,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -14,6 +14,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { useMediaQuery } from 'react-responsive';
 import { useAuth } from '../context/AuthContext';
 import { labelize } from '../utils/format';
+import Logo from './Logo';
 
 const DRAWER_WIDTH = 240;
 
@@ -32,20 +33,19 @@ export default function AppLayout() {
 
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar>
-        <Typography variant="h6" fontWeight={700} color="primary">ACME Tracker</Typography>
+      <Toolbar sx={{ px: 2.5 }}>
+        <Logo />
       </Toolbar>
-      <Divider />
-      <List component="nav" aria-label="Main navigation">
+      <Typography variant="overline" color="text.secondary" sx={{ px: 3, pt: 2, pb: 0.5 }}>Workspace</Typography>
+      <List component="nav" aria-label="Main navigation" sx={{ py: 0 }}>
         {NAV_ITEMS.filter((item) => !item.permission || can(item.permission)).map((item) => (
           <ListItemButton
             key={item.to}
             component={NavLink}
             to={item.to}
             onClick={() => setOpen(false)}
-            sx={{ '&.active': { bgcolor: 'action.selected', color: 'primary.main' } }}
           >
-            <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon>
+            <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.label} />
           </ListItemButton>
         ))}
@@ -69,7 +69,7 @@ export default function AppLayout() {
           )}
           <Box sx={{ flexGrow: 1 }} />
           <Chip size="small" label={labelize(user?.role)} color="primary" variant="outlined" />
-          {!isMobile && <Typography variant="body2">{user?.full_name}</Typography>}
+          {!isMobile && <Typography variant="body2" fontWeight={600}>{user?.full_name}</Typography>}
           <Avatar sx={{ width: 32, height: 32, fontSize: 14 }}>{user?.full_name?.[0]}</Avatar>
           <Tooltip title="Sign out">
             <IconButton aria-label="Sign out" onClick={logout}><LogoutIcon /></IconButton>

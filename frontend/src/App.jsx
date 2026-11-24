@@ -1,4 +1,4 @@
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { CssBaseline, ThemeProvider } from '@mui/material';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -15,13 +15,7 @@ import ProjectsPage from './pages/ProjectsPage';
 import RegisterPage from './pages/RegisterPage';
 import TeamPage from './pages/TeamPage';
 import UsersPage from './pages/UsersPage';
-
-const theme = createTheme({
-  palette: { primary: { main: '#2f5bd3' }, background: { default: '#f5f7fb' } },
-  shape: { borderRadius: 10 },
-  typography: { fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' },
-  components: { MuiButton: { styleOverrides: { root: { textTransform: 'none', fontWeight: 600 } } } },
-});
+import theme from './theme';
 
 export default function App() {
   return (
