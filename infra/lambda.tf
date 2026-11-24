@@ -8,7 +8,7 @@ module "lambda" {
   architectures   = [each.value.arch]
   handler         = each.value.handler
   runtime         = each.value.runtime
-  memory_size     = 128
+  memory_size     = try(each.value.memory, 128)
   timeout         = 300
   tracing_mode    = "PassThrough"
   build_in_docker = false
@@ -92,19 +92,32 @@ resource "null_resource" "hot_reload" {
   depends_on = [module.lambda, aws_s3_bucket.hot_reload]
 }
 
+# Installs the shared parent POM and common-lib into ~/.m2 once, before any service build,
+# so parallel service builds never race on building the shared module.
+resource "null_resource" "java_common_build" {
+  count = length(local.backend_names_java) > 0 && fileexists(format("%s/pom.xml", local.java_common_dir)) ? 1 : 0
+
+  triggers = {
+    source_code_hash = local.java_common_hash
+  }
+
+  provisioner "local-exec" {
+    command = format("cd %s && mvn -B -q -pl common-lib -am install -DskipTests", local.java_common_dir)
+  }
+}
+
+# Builds each Java service into a single shaded jar under backend/<service>/target.
 resource "null_resource" "java_build" {
   for_each = local.backend_names_java
 
   triggers = {
-    source_code_hash = md5(jsonencode({
-      for file in fileset(format("%s/../backend/%s", path.module, each.key), "**/*") :
-      file => {
-        size = try(filesize(format("%s/../backend/%s/%s", path.module, each.key, file)), 0)
-      }
-    }))
+    source_code_hash = each.value.src_hash
+    build_command    = join(" && ", each.value.mvn_cmd)
   }
 
   provisioner "local-exec" {
     command = join(" && ", each.value.mvn_cmd)
   }
+
+  depends_on = [null_resource.java_common_build]
 }

@@ -91,13 +91,18 @@ const server = http.createServer((req, res) => {
   delete headers['sec-fetch-mode'];
   delete headers['sec-fetch-dest'];
 
-  // Keep only essential headers
+  // Remove hop-by-hop headers that must not be forwarded by a proxy
+  ['connection', 'keep-alive', 'proxy-connection', 'transfer-encoding', 'upgrade', 'te', 'trailer']
+    .forEach((name) => delete headers[name]);
+
+  // Forward everything else (including Authorization for JWT auth), pointing Host at the target
   const options = {
     hostname: target.hostname,
     port: target.port,
     path: target.path,
     method: req.method,
     headers: {
+      ...headers,
       'accept': headers.accept || 'application/json',
       'content-type': headers['content-type'] || 'application/json',
       'user-agent': headers['user-agent'] || 'proxy-server',

@@ -512,7 +512,8 @@ install_java_openjdk() {
 
         # Set JAVA_HOME if not already set
         if ! grep -q "export JAVA_HOME=" "$ACTUAL_HOME/.bashrc" 2>/dev/null; then
-            echo 'export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION-openjdk-amd64' >> "$ACTUAL_HOME/.bashrc"
+            # Double quotes: expand $JAVA_VERSION now (it is not set in future shells)
+            echo "export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION-openjdk-amd64" >> "$ACTUAL_HOME/.bashrc"
             export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION-openjdk-amd64
             print_info "Set JAVA_HOME in ~/.bashrc"
         fi

@@ -24,17 +24,41 @@ locals {
     for file in fileset(format("%s/../backend", path.module), "*/requirements.txt") :
     dirname(file) if !startswith(dirname(file), "_") && !startswith(dirname(file), ".")
   ]
+  # Shared Maven module (parent POM + common-lib) used by every Java service.
+  # The "_" prefix keeps it out of service discovery above.
+  java_common_dir = abspath(format("%s/../backend/_common", path.module))
+  java_common_hash = md5(join("", [
+    for file in sort(concat(
+      tolist(fileset(local.java_common_dir, "pom.xml")),
+      tolist(fileset(local.java_common_dir, "*/pom.xml")),
+      tolist(fileset(local.java_common_dir, "*/src/main/**")),
+    )) : filemd5(format("%s/%s", local.java_common_dir, file))
+  ]))
   backend_names_java = {
     for name in local.backend_dirs_java : name => {
       name    = name
       arch    = "x86_64"
       runtime = "java25"
       handler = "com.example.Handler::handleRequest"
-      path    = abspath(format("%s/../backend/%s/target", path.module, name))
+      # Java needs more memory than the 128 MB default; Lambda CPU scales with memory (cold starts).
+      memory = 1024
+      path   = abspath(format("%s/../backend/%s/target", path.module, name))
+      # Rebuild when this service's sources or the shared module change (content, not size).
+      src_hash = md5(join("", concat([
+        for file in sort(concat(
+          tolist(fileset(format("%s/../backend/%s", path.module, name), "pom.xml")),
+          tolist(fileset(format("%s/../backend/%s", path.module, name), "src/main/**")),
+        )) : filemd5(format("%s/../backend/%s/%s", path.module, name, file))
+      ], [local.java_common_hash])))
       mvn_cmd = [
         format("cd %s", abspath(format("%s/../backend/%s", path.module, name))),
-        "mvn clean package -DskipTests",
-        format("find ./target ! -name '%s*.jar' -delete", name),
+        "mvn -B -q clean package -DskipTests",
+        # -mindepth 1: without it find also tries to delete target/ itself and exits 1.
+        format("find ./target -mindepth 1 ! -name '%s*.jar' -delete", name),
+        # The Lambda Java runtime only loads jars from /var/task/lib (a jar at the zip root
+        # gives ClassNotFoundException), so ship the shaded jar as lib/<service>.jar.
+        "mkdir -p ./target/lib",
+        format("mv ./target/%s*.jar ./target/lib/", name),
       ]
     }
   }
@@ -111,6 +135,10 @@ locals {
     MONGO_NAME    = data.aws_caller_identity.this.id == "000000000000" ? "mongo" : try(one(aws_docdb_cluster.this.*.database_name), "")
     MONGO_USER    = data.aws_caller_identity.this.id == "000000000000" ? "" : try(one(aws_docdb_cluster.this.*.master_username), "")
     MONGO_PASS    = data.aws_caller_identity.this.id == "000000000000" ? "" : try(one(aws_docdb_cluster.this.*.master_password), "")
+    # Signing key for access/refresh JWTs, shared by all services.
+    JWT_SECRET = random_password.jwt_secret.result
+    # Faster Java cold starts: stop JIT at tier 1 (C1). Ignored by non-Java runtimes.
+    JAVA_TOOL_OPTIONS = "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
   }
   lambda_role_arn = format(
     "arn:%s:iam::%s:role/%s-lambda-%s-%s",
