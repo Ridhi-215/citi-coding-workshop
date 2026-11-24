@@ -78,6 +78,15 @@ Every environment is seeded with one account per role. All use the password `Dem
 These accounts are for demonstrations only: change their passwords or delete them before
 using the system with real data.
 
+To put an AWS environment back to exactly the demo data (this deletes **all** data,
+including every account created since), invoke the auth Lambda directly with your AWS
+credentials. This is not reachable through the website or the public API:
+
+```sh
+aws lambda invoke --function-name coding-workshop-auth-service-<participant-id> \
+  --cli-binary-format raw-in-base64-out --payload '{"maintenance":"reset-demo-data"}' /dev/stdout
+```
+
 ## Setup
 
 ### Prerequisites

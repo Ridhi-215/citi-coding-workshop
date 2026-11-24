@@ -45,6 +45,30 @@ public final class Migrations {
     }
 
     /**
+     * Deletes ALL data (every account included) and loads the original demo seed again, in one
+     * transaction. Only reachable through a direct, IAM-authorised Lambda invocation (see
+     * auth-service {@code Handler}); never through the HTTP API.
+     *
+     * @param conn open connection
+     * @throws Exception on database errors (nothing is changed then)
+     */
+    public static void resetDemoData(Connection conn) throws Exception {
+        ensure(conn);
+        Sql.query(conn, "SELECT pg_advisory_lock(?)", LOCK_KEY);
+        try {
+            Tx.run(conn, c -> {
+                Sql.update(c, "TRUNCATE allocations, deliverable_dependencies, deliverables, expenses, projects,"
+                    + " team_members, users RESTART IDENTITY CASCADE");
+                Seeder.seed(c);
+                return null;
+            });
+            LOG.info("Demo data reset");
+        } finally {
+            Sql.query(conn, "SELECT pg_advisory_unlock(?)", LOCK_KEY);
+        }
+    }
+
+    /**
      * Applies pending migrations and seeds an empty database.
      *
      * @param conn open connection

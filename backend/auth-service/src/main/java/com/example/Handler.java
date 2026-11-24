@@ -3,12 +3,15 @@ package com.example;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.example.common.db.Db;
+import com.example.common.db.Migrations;
 import com.example.common.db.Sql;
 import com.example.common.http.Responses;
 import com.example.common.http.Router;
 import com.example.common.security.Permission;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Lambda entry point of auth-service (handler name fixed by infra/locals.tf).
@@ -17,6 +20,8 @@ import java.util.Map;
  * Any signed-in user: {@code GET /me}. Admin only: {@code /users} CRUD.
  */
 public class Handler implements RequestHandler<Map<String, Object>, Map<String, Object>> {
+
+    private static final Logger LOG = Logger.getLogger(Handler.class.getName());
 
     private static final Router ROUTER = routes(new Router("auth-service"));
 
@@ -47,8 +52,32 @@ public class Handler implements RequestHandler<Map<String, Object>, Map<String, 
             .delete("/users/{id}", Permission.MANAGE_USERS, users::delete);
     }
 
+    /** Event key of maintenance actions; Function URL (HTTP) events can never contain it. */
+    static final String MAINTENANCE = "maintenance";
+
     @Override
     public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
+        if (event != null && event.containsKey(MAINTENANCE)) {
+            return maintenance(event.get(MAINTENANCE));
+        }
         return ROUTER.handle(event);
+    }
+
+    /**
+     * Operator actions, run with {@code aws lambda invoke} (needs IAM permission to invoke the
+     * function; the public Function URL wraps every request in an HTTP event instead).
+     * {@code {"maintenance": "reset-demo-data"}} wipes all data and reloads the demo seed.
+     */
+    static Map<String, Object> maintenance(Object action) {
+        if (!"reset-demo-data".equals(action)) {
+            return Map.of("status", "error", "message", "Unknown maintenance action");
+        }
+        try {
+            Migrations.resetDemoData(Db.get());
+            return Map.of("status", "ok", "action", "reset-demo-data");
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Demo data reset failed", e);
+            return Map.of("status", "error", "message", "Reset failed; nothing was changed");
+        }
     }
 }
