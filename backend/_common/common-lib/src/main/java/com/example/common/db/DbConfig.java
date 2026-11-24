@@ -67,6 +67,10 @@ public record DbConfig(String host, int port, String database, String user, Stri
         props.setProperty("user", user);
         props.setProperty("password", password);
         props.setProperty("connectTimeout", String.valueOf(CONNECT_TIMEOUT_SECONDS));
+        props.setProperty("loginTimeout", String.valueOf(CONNECT_TIMEOUT_SECONDS));
+        // pgjdbc waits only 5s for the SSL handshake reply by default; a resuming Aurora
+        // cluster takes longer, which failed the first request after an idle period.
+        props.setProperty("sslResponseTimeout", String.valueOf(CONNECT_TIMEOUT_SECONDS * 1000));
         props.setProperty("socketTimeout", String.valueOf(SOCKET_TIMEOUT_SECONDS));
         props.setProperty("ApplicationName", "acme-tracker");
         props.setProperty("sslmode", local ? "disable" : "require");

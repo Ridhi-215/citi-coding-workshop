@@ -10,8 +10,9 @@ backend (runs on the `java25` runtime), PostgreSQL (local) / Aurora PostgreSQL (
 | 1 | Java packaging check (J7) on LocalStack | Done - jar must be in `lib/` (see below) |
 | 1 | Template fixes J3-J6, shared build step, #1, #2, #4 | Done |
 | 1 | Local Postgres round-trip from Lambda | Blocked - Postgres listens on 127.0.0.1 only (needs `sudo`) |
-| 1 | First AWS deploy + Aurora round-trip | Next |
-| 2 | Shared module (router, auth, validation, query builder) | Not started |
+| 1 | First AWS deploy + Aurora round-trip | Done - Java 25.0.5 runtime, Aurora 17.7 over SSL, migrations + seed applied |
+| 1 | CloudFront: API via `/api/auth-service`, API 404 passes through as JSON 404 | Done |
+| 2 | Shared module (router, auth, validation, query builder) | Written; router unit tests (17) + migrations IT (3) pass |
 | 2 | auth / projects / deliverables / resources / dashboard services | Not started |
 | 3 | Seed data, JUnit/Mockito unit tests, integration tests, JaCoCo 80% | Not started |
 | 4 | Frontend | Not started |
@@ -44,12 +45,30 @@ locally and in AWS (otherwise recommend switching the backend to Python).
   `$JAVA_VERSION`; fixed. It also does not install Maven (installed manually to
   `~/.local/share/apache-maven-3.9.9`, linked from `~/.local/bin/mvn`).
 
+- **Aurora resume timeout.** The first request after Aurora paused (0 ACU) failed: pgjdbc
+  waits only 5 s for the SSL handshake reply (`sslResponseTimeout`). Raised to 30 s
+  together with `loginTimeout`, plus one connection retry.
+- **AWS region.** `~/.bashrc` sets `AWS_REGION='ap-south-1'` without `export`, so scripts
+  fell back to `us-east-1` and `terraform init` failed with a 301 on the state bucket.
+  Deploys currently pass `AWS_REGION=ap-south-1` explicitly.
+
+## AWS endpoints
+
+- Website / API base: https://dbi1uqut4q6ch.cloudfront.net
+- Health: `GET /api/auth-service/health/db`
+
+## Measurements
+
+- Java cold start (Init Duration) on 1024 MB: ~320 ms; warm DB request via CloudFront: ~90 ms.
+
 ## Event shape (for the router)
 
-- Direct Function URL on LocalStack: `rawPath` is the full request path, e.g.
-  `/api/auth-service/health`.
+- Direct Function URL (LocalStack and AWS) and CloudFront: `rawPath` is the full path,
+  e.g. `/api/auth-service/health`. The local dev proxy strips `/api/<service>`.
+  The router accepts both.
 
 ## Open items
 
 - Local Postgres must listen on `0.0.0.0` and accept the Docker range (`start-dev.sh`
   does this with `sudo`).
+- `~/.bashrc` line with `AWS_REGION` needs `export`.
