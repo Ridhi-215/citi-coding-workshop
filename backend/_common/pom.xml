@@ -31,6 +31,9 @@
         <module>common-lib</module>
         <module>../auth-service</module>
         <module>../projects-service</module>
+        <module>../deliverables-service</module>
+        <module>../resources-service</module>
+        <module>../dashboard-service</module>
     </modules>
 
     <properties>
