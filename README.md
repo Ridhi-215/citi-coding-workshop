@@ -32,16 +32,22 @@ delete them before the system holds real data.
 
 ## Screenshots
 
-<!-- Add the images to docs/screenshots/ and uncomment the lines below. -->
-<!-- ![Dashboard](docs/screenshots/dashboard.png) -->
-<!-- ![Projects list](docs/screenshots/projects.png) -->
-<!-- ![Mobile layout](docs/screenshots/mobile.png) -->
+Taken from the live demo, signed in as the Admin demo account.
 
-| Screen | File |
-|---|---|
-| Dashboard | `docs/screenshots/dashboard.png` |
-| Projects list | `docs/screenshots/projects.png` |
-| Mobile layout | `docs/screenshots/mobile.png` |
+**Dashboard:** portfolio KPIs, budget spent vs. planned, at-risk projects, deliverable status,
+over-allocated people and blocking work in dependency chains.
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+**Projects:** search, status and at-risk filters, budget used per project, and role-aware
+edit and delete actions.
+
+![Projects list](docs/screenshots/projects.png)
+
+**Mobile:** the sidebar collapses into a menu, and the KPI tiles and tables reflow into
+cards.
+
+<img src="docs/screenshots/mobile.png" alt="Dashboard on a phone-sized screen" width="320">
 
 ## How the app answers the business questions
 
