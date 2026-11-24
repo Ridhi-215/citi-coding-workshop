@@ -13,13 +13,16 @@ backend (runs on the `java25` runtime), PostgreSQL (local) / Aurora PostgreSQL (
 | 1 | First AWS deploy + Aurora round-trip | Done - Java 25.0.5 runtime, Aurora 17.7 over SSL, migrations + seed applied |
 | 1 | CloudFront: API via `/api/auth-service`, API 404 passes through as JSON 404 | Done |
 | 2 | Shared module (router, auth, validation, query builder) | Done; router unit tests (17) + migrations IT (3) pass |
-| 2 | auth-service (register, login, refresh, me, admin users) | Done - 10 ITs, deployed local + AWS |
+| 2 | auth-service (register, login, refresh, me, admin users, last-admin guard) | Done - 15 ITs, deployed local + AWS |
 | 2 | projects-service (projects + expenses, budget/risk roll-ups via `project_overview` view) | Done - 5 ITs, deployed local + AWS |
-| 2 | deliverables / resources / dashboard services | Not started |
+| 2 | deliverables-service (CRUD, dependencies, cycle check, chains, graph) | Done - 5 ITs, deployed local + AWS |
+| 2 | resources-service (members, allocations, over-allocation) | Done - 3 ITs, deployed local + AWS |
+| 2 | dashboard-service (/summary, /projects/{id}/health) | Done - 2 ITs, deployed local + AWS |
 | 3 | Seed data (`seed.sql`: 12 members, 8 projects, 23 deliverables, 17 dependencies, 23 allocations) | Done - applied locally and on Aurora |
-| 3 | More unit tests, JaCoCo 80% gate | Not started |
+| 3 | JaCoCo: services 90-96% line coverage; common-lib 54% (needs unit tests), then enable the 80% gate | In progress |
 | 4 | Frontend: login, responsive shell, projects list/search/filter/CRUD with role-aware buttons | Done (minimal) |
-| 4 | Frontend: dashboard, deliverables, resources, expenses pages; Jest tests | Not started |
+| 4 | Frontend: admin Users page, dashboard, deliverables + dependencies, team + allocations, project detail + expenses | Done |
+| 4 | Jest + Testing Library (37 tests: role-aware UI, users rules, api client, dialogs, validation) | Done |
 | 5 | AWS deploy of frontend | Done - https://dbi1uqut4q6ch.cloudfront.net (app routes, assets, API all verified) |
 | 5 | README | Not started |
 
@@ -66,8 +69,8 @@ Java fallback timebox (07:40 UTC, 1.5 h): **met** - Java path works locally and 
   mounted directory and the local JVM fails with "Could not determine current working
   directory". Fix after an AWS deploy:
   `docker ps --format '{{.Names}}' | grep '^localstack-main-lambda-' | xargs -r docker rm -f`.
-- **Template ESLint config** imports `eslint-plugin-react-hooks` / `react-refresh`, which are not
-  installed, so `npm run lint` fails (pre-existing; to fix with the Jest setup).
+- **Template ESLint config** imported `eslint-plugin-react-hooks` / `react-refresh` without
+  installing them; installed, and test files get Jest globals. `npm run lint` is clean.
 
 ## Demo accounts
 
@@ -90,5 +93,7 @@ Java fallback timebox (07:40 UTC, 1.5 h): **met** - Java path works locally and 
   The router accepts both.
 
 ## Open items
+
+- AWS demo data was changed by manual CRUD testing (APOLLO deleted, SAMPLE added); decide on a reset before the presentation.
 
 - `~/.bashrc` line with `AWS_REGION` needs `export`.
