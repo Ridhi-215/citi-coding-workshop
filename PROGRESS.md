@@ -94,6 +94,7 @@ See the README.
 
 ## Open items
 
-- AWS demo data was changed by manual CRUD testing (APOLLO deleted, SAMPLE added); decide on a reset before the presentation.
+- None blocking. AWS demo data was reset to the seed before release (README: Demo accounts).
+
 
 - `~/.bashrc` line with `AWS_REGION` needs `export`.
