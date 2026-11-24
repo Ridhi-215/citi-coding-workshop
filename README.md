@@ -346,6 +346,6 @@ Every endpoint except `GET /health`, `GET /health/db`, `POST /login`, `POST /reg
 
 ## Author
 
-[Your full name], GitHub: <https://github.com/Ridhi-215>
+[Guntur Ridhi], GitHub: <https://github.com/Ridhi-215>
 
 Built for the Citi Technology Coding Workshop, November 2026.
