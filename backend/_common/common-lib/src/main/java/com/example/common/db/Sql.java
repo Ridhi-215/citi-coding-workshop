@@ -146,6 +146,9 @@ public final class Sql {
         if (raw == null) {
             return null;
         }
+        if (raw instanceof java.sql.Array array) {
+            return java.util.Arrays.asList((Object[]) array.getArray());
+        }
         return switch (typeName) {
             case "date" -> rs.getObject(i, LocalDate.class);
             case "timestamptz", "timestamp" -> rs.getObject(i, OffsetDateTime.class);

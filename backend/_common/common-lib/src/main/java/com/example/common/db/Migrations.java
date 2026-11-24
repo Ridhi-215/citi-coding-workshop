@@ -24,7 +24,9 @@ public final class Migrations {
     private static final long LOCK_KEY = 4_242_001L;
 
     /** Migration scripts on the classpath, applied in order. Never edit one once deployed; add a new one. */
-    static final List<String> SCRIPTS = List.of("db/migration/V1__schema.sql");
+    static final List<String> SCRIPTS = List.of(
+        "db/migration/V1__schema.sql",
+        "db/migration/V2__project_overview.sql");
 
     /** Domain demo data, applied when the database has no projects. */
     static final String SEED_SCRIPT = "db/seed/seed.sql";

@@ -6,33 +6,47 @@ import com.example.common.db.Db;
 import com.example.common.db.Sql;
 import com.example.common.http.Responses;
 import com.example.common.http.Router;
+import com.example.common.security.Permission;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Lambda entry point for auth-service ({@code com.example.Handler::handleRequest},
- * the handler name Terraform configures for every Java service).
+ * Lambda entry point of auth-service (handler name fixed by infra/locals.tf).
+ *
+ * <p>Public: {@code POST /register}, {@code POST /login}, {@code POST /refresh}.
+ * Any signed-in user: {@code GET /me}. Admin only: {@code /users} CRUD.
  */
 public class Handler implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 
-    /** Built once per container and reused across invocations. */
-    private static final Router ROUTER = new Router("auth-service")
-        .get("/health/db", null, req -> {
-            Map<String, Object> body = new LinkedHashMap<>();
-            body.put("status", "ok");
-            body.put("postgres", Sql.scalarText(Db.get(), "SELECT version()"));
-            body.put("users", Sql.scalar(Db.get(), "SELECT count(*) FROM users"));
-            body.put("javaVersion", System.getProperty("java.version"));
-            return Responses.ok(body);
-        });
+    private static final Router ROUTER = routes(new Router("auth-service"));
 
     /**
-     * Handles a Lambda Function URL request (payload format 2.0).
+     * Registers all routes of this service on a router (tests pass a router with a fixed clock).
      *
-     * @param event   the Lambda event
-     * @param context the Lambda context
-     * @return a response map with statusCode, headers and body
+     * @param router router to configure
+     * @return the same router
      */
+    static Router routes(Router router) {
+        AuthApi auth = new AuthApi(router::tokens);
+        UsersApi users = new UsersApi();
+        return router
+            .get("/health/db", null, req -> {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("status", "ok");
+                body.put("users", Sql.scalar(Db.get(), "SELECT count(*) FROM users"));
+                return Responses.ok(body);
+            })
+            .post("/register", null, auth::register)
+            .post("/login", null, auth::login)
+            .post("/refresh", null, auth::refresh)
+            .get("/me", Permission.READ, auth::me)
+            .get("/users", Permission.MANAGE_USERS, users::list)
+            .get("/users/{id}", Permission.MANAGE_USERS, users::get)
+            .post("/users", Permission.MANAGE_USERS, users::create)
+            .put("/users/{id}", Permission.MANAGE_USERS, users::update)
+            .delete("/users/{id}", Permission.MANAGE_USERS, users::delete);
+    }
+
     @Override
     public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
         return ROUTER.handle(event);

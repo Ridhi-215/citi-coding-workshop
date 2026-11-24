@@ -174,10 +174,19 @@ public final class Router {
         if (header == null || !header.regionMatches(true, 0, "Bearer ", 0, 7) || header.length() <= 7) {
             throw ApiException.unauthorized("UNAUTHORIZED", "Authentication is required");
         }
+        return tokens().verify(header.substring(7).trim(), Tokens.ACCESS);
+    }
+
+    /**
+     * Returns the token issuer/verifier, created on first use (needs {@code JWT_SECRET}).
+     *
+     * @return tokens shared by this router
+     */
+    public synchronized Tokens tokens() {
         if (tokens == null) {
             tokens = tokensSupplier.get();
         }
-        return tokens.verify(header.substring(7).trim(), Tokens.ACCESS);
+        return tokens;
     }
 
     private synchronized void ensureStarted(String path) throws Exception {
