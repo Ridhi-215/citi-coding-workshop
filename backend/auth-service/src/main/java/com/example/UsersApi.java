@@ -74,7 +74,11 @@ final class UsersApi {
         v.check(!(self && role != null && !"admin".equals(role)), "role", "You cannot remove your own admin role");
         v.check(!(self && Boolean.FALSE.equals(active)), "is_active", "You cannot deactivate your own account");
         v.throwIfInvalid();
-        find(id);
+        Map<String, Object> current = find(id);
+        boolean losesAdmin = (role != null && !"admin".equals(role)) || Boolean.FALSE.equals(active);
+        if (losesAdmin && isLastActiveAdmin(current)) {
+            throw ApiException.badRequest("At least one active admin must remain");
+        }
 
         List<String> sets = new ArrayList<>();
         List<Object> params = new ArrayList<>();
@@ -106,10 +110,17 @@ final class UsersApi {
         if (id == req.principal().userId()) {
             throw ApiException.badRequest("You cannot delete your own account");
         }
-        if (Sql.update(Db.get(), "DELETE FROM users WHERE id = ?", id) == 0) {
-            throw ApiException.notFound("User", id);
+        if (isLastActiveAdmin(find(id))) {
+            throw ApiException.badRequest("At least one active admin must remain");
         }
+        Sql.update(Db.get(), "DELETE FROM users WHERE id = ?", id);
         return Responses.noContent();
+    }
+
+    /** True when the user is the only active admin (defence in depth next to the self checks). */
+    private static boolean isLastActiveAdmin(Map<String, Object> user) throws Exception {
+        return "admin".equals(user.get("role")) && Boolean.TRUE.equals(user.get("is_active"))
+            && Sql.scalar(Db.get(), "SELECT count(*) FROM users WHERE role = 'admin' AND is_active") <= 1;
     }
 
     private static Map<String, Object> find(long id) throws Exception {

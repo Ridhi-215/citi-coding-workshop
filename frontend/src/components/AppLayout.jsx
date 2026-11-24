@@ -6,6 +6,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import FolderIcon from '@mui/icons-material/FolderOutlined';
+import PeopleIcon from '@mui/icons-material/ManageAccountsOutlined';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useMediaQuery } from 'react-responsive';
 import { useAuth } from '../context/AuthContext';
@@ -13,14 +14,15 @@ import { labelize } from '../utils/format';
 
 const DRAWER_WIDTH = 240;
 
-export const NAV_ITEMS = [
+const NAV_ITEMS = [
   { to: '/projects', label: 'Projects', icon: <FolderIcon /> },
+  { to: '/users', label: 'Users', icon: <PeopleIcon />, permission: 'MANAGE_USERS' },
 ];
 
 export default function AppLayout() {
   const isMobile = useMediaQuery({ maxWidth: 899 });
   const [open, setOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, can } = useAuth();
 
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -29,7 +31,7 @@ export default function AppLayout() {
       </Toolbar>
       <Divider />
       <List component="nav" aria-label="Main navigation">
-        {NAV_ITEMS.map((item) => (
+        {NAV_ITEMS.filter((item) => !item.permission || can(item.permission)).map((item) => (
           <ListItemButton
             key={item.to}
             component={NavLink}

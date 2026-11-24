@@ -5,6 +5,7 @@ import {
 import { useMediaQuery } from 'react-responsive';
 import { PROJECT_PRIORITIES, PROJECT_STATUSES } from '../services/projectsService';
 import { labelize } from '../utils/format';
+import { validateProject } from '../utils/validation';
 
 const EMPTY = {
   code: '', name: '', description: '', status: 'planned', priority: 'medium',
@@ -18,20 +19,6 @@ function toForm(project) {
     priority: project.priority, start_date: project.start_date, end_date: project.end_date,
     budget_planned: String(project.budget_planned ?? ''), manager_id: project.manager_id ?? null,
   };
-}
-
-export function validateProject(form) {
-  const errors = {};
-  if (!/^[A-Za-z0-9][A-Za-z0-9-]{1,19}$/.test(form.code.trim())) errors.code = 'Use 2-20 letters, digits or "-"';
-  if (!form.name.trim()) errors.name = 'Name is required';
-  if (!form.start_date) errors.start_date = 'Start date is required';
-  if (!form.end_date) errors.end_date = 'End date is required';
-  else if (form.start_date && form.end_date < form.start_date) errors.end_date = 'Must be on or after the start date';
-  const budget = Number(form.budget_planned);
-  if (form.budget_planned === '' || Number.isNaN(budget)) errors.budget_planned = 'Enter an amount';
-  else if (budget < 0) errors.budget_planned = 'Cannot be negative';
-  else if (!/^\d+(\.\d{1,2})?$/.test(String(form.budget_planned).trim())) errors.budget_planned = 'At most 2 decimals';
-  return errors;
 }
 
 /** Create/edit dialog. Server-side field errors (400 VALIDATION_FAILED) are shown on the fields. */

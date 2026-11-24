@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Alert, Box, Button, Card, CardContent, Chip, FormControlLabel, IconButton, InputAdornment, LinearProgress,
   MenuItem, Paper, Stack, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination,
@@ -15,7 +15,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import ProjectDialog from '../components/ProjectDialog';
 import { useAuth } from '../context/AuthContext';
 import { useNotify } from '../context/NotifyContext';
-import { useDebounced } from '../hooks';
+import { useDebounced, useQuery } from '../hooks';
 import {
   createProject, deleteProject, listProjects, PROJECT_STATUSES, updateProject,
 } from '../services/projectsService';
@@ -56,35 +56,16 @@ export default function ProjectsPage() {
   const [atRisk, setAtRisk] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [data, setData] = useState({ items: [], total: 0 });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [editing, setEditing] = useState(undefined); // undefined = closed, null = new, object = edit
   const [deleting, setDeleting] = useState(null);
   const debouncedSearch = useDebounced(search);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      setData(await listProjects({
-        search: debouncedSearch, status, at_risk: atRisk ? 'true' : '',
-        limit: rowsPerPage, offset: page * rowsPerPage, sort: 'code',
-      }));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [debouncedSearch, status, atRisk, page, rowsPerPage]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  useEffect(() => {
-    setPage(0);
-  }, [debouncedSearch, status, atRisk]);
+  const query = useQuery(listProjects, {
+    search: debouncedSearch, status, at_risk: atRisk ? 'true' : '',
+    limit: rowsPerPage, offset: page * rowsPerPage, sort: 'code',
+  });
+  const data = query.data || { items: [], total: 0 };
+  const { loading, reload: load } = query;
+  const error = query.error?.message;
 
   const save = async (body) => {
     if (editing) {
@@ -120,15 +101,15 @@ export default function ProjectsPage() {
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }} alignItems={{ sm: 'center' }}>
         <TextField
-          size="small" placeholder="Search code, name, manager" value={search} onChange={(e) => setSearch(e.target.value)}
+          size="small" placeholder="Search code, name, manager" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }}
           sx={{ flex: 1, maxWidth: { sm: 360 } }}
           slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }, htmlInput: { 'aria-label': 'Search projects' } }}
         />
-        <TextField select size="small" label="Status" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ minWidth: 160 }}>
+        <TextField select size="small" label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }} sx={{ minWidth: 160 }}>
           <MenuItem value="">All statuses</MenuItem>
           {PROJECT_STATUSES.map((s) => <MenuItem key={s} value={s}>{labelize(s)}</MenuItem>)}
         </TextField>
-        <FormControlLabel control={<Switch checked={atRisk} onChange={(e) => setAtRisk(e.target.checked)} />} label="At risk only" />
+        <FormControlLabel control={<Switch checked={atRisk} onChange={(e) => { setAtRisk(e.target.checked); setPage(0); }} />} label="At risk only" />
       </Stack>
 
       {error && <Alert severity="error" sx={{ mb: 2 }} action={<Button color="inherit" size="small" onClick={load}>Retry</Button>}>{error}</Alert>}

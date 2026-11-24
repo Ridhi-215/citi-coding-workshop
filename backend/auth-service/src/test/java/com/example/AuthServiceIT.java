@@ -14,6 +14,8 @@ import java.time.Clock;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Runs auth-service routes against the local PostgreSQL ({@code acme_test}).
@@ -121,6 +123,57 @@ class AuthServiceIT {
         call("PUT", "/users/" + self, admin, Map.of("role", "viewer"), 400);
         call("PUT", "/users/" + self, admin, Map.of("is_active", false), 400);
         call("DELETE", "/users/" + self, admin, null, 400);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"manager@acme.com", "contributor@acme.com", "viewer@acme.com"})
+    void nonAdminsGet403OnEveryUsersEndpoint(String email) throws Exception {
+        String t = token(email);
+        long adminId = TOKENS.verify(token("admin@acme.com"), Tokens.ACCESS).userId();
+        Map<String, Object> body = Map.of("email", "x@acme.com", "password", "Secret123", "full_name", "X");
+        for (String[] route : new String[][] {
+            {"GET", "/users"}, {"GET", "/users/" + adminId}, {"POST", "/users"},
+            {"PUT", "/users/" + adminId}, {"DELETE", "/users/" + adminId}}) {
+            JsonNode err = call(route[0], "/api/auth-service" + route[1], t, "GET".equals(route[0]) ? null : body, 403);
+            assertEquals("FORBIDDEN", err.at("/error/code").asText());
+        }
+        call("PUT", "/users/" + adminId, t, Map.of("role", "viewer"), 403);
+    }
+
+    @Test
+    void lastActiveAdminCannotBeDemotedDeactivatedOrDeletedByAnotherAdmin() throws Exception {
+        String admin = token("admin@acme.com");
+        long firstId = TOKENS.verify(admin, Tokens.ACCESS).userId();
+        long secondId = call("POST", "/users", admin, Map.of("email", "second.admin@acme.com",
+            "password", "Second123", "full_name", "Second Admin", "role", "admin"), 201).get("id").asLong();
+        String second = token("second.admin@acme.com", "Second123");
+
+        // Two admins: the second may demote the first, and the first is then a manager.
+        call("PUT", "/users/" + firstId, second, Map.of("role", "manager"), 200);
+        // Now the second is the only admin and nobody can remove that role.
+        call("PUT", "/users/" + secondId, second, Map.of("role", "viewer"), 400);
+        call("PUT", "/users/" + secondId, second, Map.of("is_active", false), 400);
+        call("DELETE", "/users/" + secondId, second, null, 400);
+
+        // Restore the seed admin and remove the extra one.
+        call("PUT", "/users/" + firstId, second, Map.of("role", "admin"), 200);
+        call("DELETE", "/users/" + secondId, token("admin@acme.com"), null, 204);
+    }
+
+    @Test
+    void deactivatedUserCannotRefresh() throws Exception {
+        String admin = token("admin@acme.com");
+        long id = call("POST", "/users", admin, Map.of("email", "leaver@acme.com", "password", "Leaver123",
+            "full_name", "Leaver"), 201).get("id").asLong();
+        String refresh = call("POST", "/login", null, Map.of("email", "leaver@acme.com", "password", "Leaver123"), 200)
+            .get("refresh_token").asText();
+        call("PUT", "/users/" + id, admin, Map.of("is_active", false), 200);
+        call("POST", "/refresh", null, Map.of("refresh_token", refresh), 401);
+    }
+
+    private static String token(String email, String password) throws Exception {
+        return call("POST", "/login", null, Map.of("email", email, "password", password), 200)
+            .get("access_token").asText();
     }
 
     private static String token(String email) throws Exception {
