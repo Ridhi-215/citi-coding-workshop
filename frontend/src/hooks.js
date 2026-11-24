@@ -40,3 +40,21 @@ export function useQuery(fetcher, params) {
     mutate,
   };
 }
+
+const optionCache = new Map();
+
+/** Loads select options once per session (e.g. all projects or members), shared between pages. */
+export function useOptions(key, loader) {
+  const [options, setOptions] = useState(() => optionCache.get(key) || []);
+  useEffect(() => {
+    let active = true;
+    loader().then((rows) => {
+      optionCache.set(key, rows);
+      if (active) setOptions(rows);
+    }, () => {});
+    return () => {
+      active = false;
+    };
+  }, [key, loader]);
+  return options;
+}

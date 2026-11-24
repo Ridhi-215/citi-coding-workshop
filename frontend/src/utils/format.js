@@ -27,3 +27,12 @@ export const RISK_LABELS = {
   overdue_work: 'Overdue deliverables',
   blocked_work: 'Blocked deliverables',
 };
+
+export const DELIVERABLE_STATUS_COLORS = {
+  not_started: 'default',
+  in_progress: 'primary',
+  blocked: 'error',
+  completed: 'success',
+};
+
+export const formatPct = (value) => (value === null || value === undefined ? '—' : `${Number(value)}%`);

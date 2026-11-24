@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Alert, Box, Button, Card, CardContent, Chip, FormControlLabel, IconButton, InputAdornment, LinearProgress,
+  Alert, Box, Button, Card, CardContent, Chip, FormControlLabel, IconButton, InputAdornment, LinearProgress, Link,
   MenuItem, Paper, Stack, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination,
   TableRow, TextField, Tooltip, Typography,
 } from '@mui/material';
@@ -9,6 +9,7 @@ import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import EditIcon from '@mui/icons-material/EditOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import WarningIcon from '@mui/icons-material/WarningAmberRounded';
+import { Link as RouterLink } from 'react-router-dom';
 import { useMediaQuery } from 'react-responsive';
 import BudgetBar from '../components/BudgetBar';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -127,7 +128,7 @@ export default function ProjectsPage() {
                   <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
                     <Box sx={{ minWidth: 0 }}>
                       <Typography variant="overline" color="text.secondary">{p.code}</Typography>
-                      <Typography fontWeight={600}>{p.name}</Typography>
+                      <Link component={RouterLink} to={`/projects/${p.id}`} fontWeight={600}>{p.name}</Link>
                     </Box>
                     <ProjectActions project={p} can={can} onEdit={setEditing} onDelete={setDeleting} />
                   </Stack>
@@ -163,7 +164,7 @@ export default function ProjectsPage() {
                 {data.items.map((p) => (
                   <TableRow key={p.id} hover>
                     <TableCell>
-                      <Typography variant="body2" fontWeight={600}>{p.name}</Typography>
+                      <Link component={RouterLink} to={`/projects/${p.id}`} variant="body2" fontWeight={600}>{p.name}</Link>
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Typography variant="caption" color="text.secondary">{p.code}</Typography>
                         <RiskChip project={p} />

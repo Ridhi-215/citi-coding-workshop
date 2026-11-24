@@ -6,7 +6,12 @@ import RequirePermission from './components/RequirePermission';
 import { AuthProvider } from './context/AuthContext';
 import { NotifyProvider } from './context/NotifyContext';
 import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import DeliverablesPage from './pages/DeliverablesPage';
+import MemberPage from './pages/MemberPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
 import ProjectsPage from './pages/ProjectsPage';
+import TeamPage from './pages/TeamPage';
 import UsersPage from './pages/UsersPage';
 
 const theme = createTheme({
@@ -26,9 +31,14 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/projects/:id" element={<ProjectDetailPage />} />
+                <Route path="/deliverables" element={<DeliverablesPage />} />
+                <Route path="/team" element={<TeamPage />} />
+                <Route path="/team/:id" element={<MemberPage />} />
                 <Route path="/users" element={<RequirePermission permission="MANAGE_USERS"><UsersPage /></RequirePermission>} />
-                <Route path="*" element={<Navigate to="/projects" replace />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>
             </Routes>
           </BrowserRouter>

@@ -5,7 +5,10 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
+import DashboardIcon from '@mui/icons-material/SpaceDashboardOutlined';
 import FolderIcon from '@mui/icons-material/FolderOutlined';
+import TaskIcon from '@mui/icons-material/TaskAltOutlined';
+import GroupsIcon from '@mui/icons-material/GroupsOutlined';
 import PeopleIcon from '@mui/icons-material/ManageAccountsOutlined';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useMediaQuery } from 'react-responsive';
@@ -15,7 +18,10 @@ import { labelize } from '../utils/format';
 const DRAWER_WIDTH = 240;
 
 const NAV_ITEMS = [
+  { to: '/dashboard', label: 'Dashboard', icon: <DashboardIcon /> },
   { to: '/projects', label: 'Projects', icon: <FolderIcon /> },
+  { to: '/deliverables', label: 'Deliverables', icon: <TaskIcon /> },
+  { to: '/team', label: 'Team', icon: <GroupsIcon /> },
   { to: '/users', label: 'Users', icon: <PeopleIcon />, permission: 'MANAGE_USERS' },
 ];
 
