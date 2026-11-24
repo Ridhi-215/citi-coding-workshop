@@ -12,11 +12,16 @@ backend (runs on the `java25` runtime), PostgreSQL (local) / Aurora PostgreSQL (
 | 1 | Local Postgres round-trip from Lambda | Done - LocalStack Lambda (Java 25.0.5) -> host Postgres 18.7 via 172.17.0.1, migrations + seed applied |
 | 1 | First AWS deploy + Aurora round-trip | Done - Java 25.0.5 runtime, Aurora 17.7 over SSL, migrations + seed applied |
 | 1 | CloudFront: API via `/api/auth-service`, API 404 passes through as JSON 404 | Done |
-| 2 | Shared module (router, auth, validation, query builder) | Written; router unit tests (17) + migrations IT (3) pass |
-| 2 | auth / projects / deliverables / resources / dashboard services | Not started |
-| 3 | Seed data, JUnit/Mockito unit tests, integration tests, JaCoCo 80% | Not started |
-| 4 | Frontend | Not started |
-| 5 | AWS deploy, README | Not started |
+| 2 | Shared module (router, auth, validation, query builder) | Done; router unit tests (17) + migrations IT (3) pass |
+| 2 | auth-service (register, login, refresh, me, admin users) | Done - 10 ITs, deployed local + AWS |
+| 2 | projects-service (projects + expenses, budget/risk roll-ups via `project_overview` view) | Done - 5 ITs, deployed local + AWS |
+| 2 | deliverables / resources / dashboard services | Not started |
+| 3 | Seed data (`seed.sql`: 12 members, 8 projects, 23 deliverables, 17 dependencies, 23 allocations) | Done - applied locally and on Aurora |
+| 3 | More unit tests, JaCoCo 80% gate | Not started |
+| 4 | Frontend: login, responsive shell, projects list/search/filter/CRUD with role-aware buttons | Done (minimal) |
+| 4 | Frontend: dashboard, deliverables, resources, expenses pages; Jest tests | Not started |
+| 5 | AWS deploy of frontend | Done - https://dbi1uqut4q6ch.cloudfront.net (app routes, assets, API all verified) |
+| 5 | README | Not started |
 
 Java fallback timebox (07:40 UTC, 1.5 h): **met** - Java path works locally and in AWS, no switch to Python.
 
@@ -51,10 +56,28 @@ Java fallback timebox (07:40 UTC, 1.5 h): **met** - Java path works locally and 
   fell back to `us-east-1` and `terraform init` failed with a 301 on the state bucket.
   Deploys currently pass `AWS_REGION=ap-south-1` explicitly.
 
+- **Dev proxy double slash.** Function URLs end in `/`, so the proxy built `.../`+`/login`
+  = `//login`, which LocalStack answers with 500/502. The proxy now trims the trailing slash.
+- **Frontend deploy read the wrong Terraform state.** `generate-env.sh` re-initialises `infra/`
+  for LocalStack when it is running; `deploy-frontend.sh` then found no AWS outputs. It now
+  runs `terraform init` for its own environment first.
+- **AWS deploy breaks running LocalStack Lambdas.** Both deploys build into the same
+  `backend/<svc>/target`, which LocalStack bind-mounts for hot reload; `mvn clean` removes the
+  mounted directory and the local JVM fails with "Could not determine current working
+  directory". Fix after an AWS deploy:
+  `docker ps --format '{{.Names}}' | grep '^localstack-main-lambda-' | xargs -r docker rm -f`.
+- **Template ESLint config** imports `eslint-plugin-react-hooks` / `react-refresh`, which are not
+  installed, so `npm run lint` fails (pre-existing; to fix with the Jest setup).
+
+## Demo accounts
+
+`admin@acme.com`, `manager@acme.com`, `contributor@acme.com`, `viewer@acme.com`, password `Demo@1234`.
+
 ## AWS endpoints
 
 - Website / API base: https://dbi1uqut4q6ch.cloudfront.net
 - Health: `GET /api/auth-service/health/db`
+- Note: first request after Aurora has paused takes ~15-20 s (resume from 0 ACU).
 
 ## Measurements
 

@@ -64,7 +64,9 @@ const server = http.createServer((req, res) => {
 
   const endpointName = pathParts[1];
   const remainingPath = pathParts.length > 2 ? '/' + pathParts.slice(2).join('/') : '';
-  const targetUrl = endpoints[endpointName] + remainingPath + (parsedUrl.search || '');
+  // Function URLs end with '/', so trim it to avoid '//path' (LocalStack answers 500 for those)
+  const base = endpoints[endpointName];
+  const targetUrl = base ? base.replace(/\/+$/, '') + (remainingPath || '/') + (parsedUrl.search || '') : null;
 
   if (!targetUrl) {
     res.writeHead(404, { 'Content-Type': 'application/json' });

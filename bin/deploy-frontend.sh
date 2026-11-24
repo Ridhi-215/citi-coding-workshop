@@ -84,6 +84,14 @@ fi
 # Change to infrastructure directory
 cd "$INFRA_DIR"
 
+# Point Terraform at this environment's state before reading outputs (another script,
+# e.g. generate-env.sh, may have left it initialised for the other environment)
+if [ -n "$PARTICIPANT_ID" ]; then
+    terraform init -reconfigure -backend-config="bucket=coding-workshop-tfstate-${PARTICIPANT_ID}" -backend-config="region=${AWS_REGION}" > /dev/null
+else
+    terraform init -reconfigure > /dev/null
+fi
+
 # Retrieve S3 bucket name from Terraform outputs
 BUCKET_NAME=$(terraform output -raw s3_bucket_name 2>/dev/null || echo "")
 echo "INFO: Target bucket - $BUCKET_NAME"
