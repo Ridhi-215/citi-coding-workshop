@@ -12,6 +12,11 @@ by CloudFront, Java Lambda services, and Aurora PostgreSQL.
 
 **<https://dbi1uqut4q6ch.cloudfront.net>**
 
+> **Note:** the demo ran in a temporary workshop AWS environment. After the workshop
+> environment is cleaned up, this URL may no longer work. The screenshots below show the app,
+> and [Run locally](#run-locally) or [Deploy to AWS](#deploy-to-aws) bring it back with the
+> same demo data.
+
 The database scales to zero when idle, so the first request after a quiet period can take
 15-20 seconds while Aurora resumes.
 
